@@ -1,0 +1,295 @@
+##Introduction  
+Fine particulate matter (PM2.5) is an ambient air pollutant for which there is strong evidence that it is harmful to human health. In the United States, the Environmental Protection Agency (EPA) is tasked with setting national ambient air quality standards for fine PM and for tracking the emissions of this pollutant into the atmosphere. Approximatly every 3 years, the EPA releases its database on emissions of PM2.5. This database is known as the National Emissions Inventory (NEI). You can read more information about the NEI at the EPA National Emissions Inventory web site.  
+  
+For each year and for each type of PM source, the NEI records how many tons of PM2.5 were emitted from that source over the course of the entire year. The data that you will use for this assignment are for 1999, 2002, 2005, and 2008.
+
+##Assignment  
+The overall goal of this assignment is to explore the National Emissions Inventory database and see what it say about fine particulate matter pollution in the United states over the 10-year period 1999-2008. You may use any R package you want to support your analysis.
+
+
+##Questions  
+You must address the following questions and tasks in your exploratory analysis. For each question/task you will need to make a single plot. Unless specified, you can use any plotting system in R to make your plot.  
+  
+1. Have total emissions from PM2.5 decreased in the United States from 1999 to 2008? Using the base plotting system, make a plot showing the total PM2.5 emission from all sources for each of the years 1999, 2002, 2005, and 2008.  
+2. Have total emissions from PM2.5 decreased in the Baltimore City, Maryland (fips == "24510") from 1999 to 2008? Use the base plotting system to make a plot answering this question.  
+3. Of the four types of sources indicated by the type (point, nonpoint, onroad, nonroad) variable, which of these four sources have seen decreases in emissions from 1999-2008 for Baltimore City? Which have seen increases in emissions from 1999-2008? Use the ggplot2 plotting system to make a plot answer this question.  
+4. Across the United States, how have emissions from coal combustion-related sources changed from 1999-2008?  
+5. How have emissions from motor vehicle sources changed from 1999-2008 in Baltimore City?  
+6. Compare emissions from motor vehicle sources in Baltimore City with emissions from motor vehicle sources in Los Angeles County, California (fips == "06037"). Which city has seen greater changes over time in motor vehicle emissions?  
+
+---
+  
+####Load Libraries & Set Working Directory  
+```{r LoadLibraries, echo=T, cache=T, eval=F}
+
+#   Load Libraries
+    library(ggplot2);
+    library(utils);
+    library(grid);
+    library(plyr);
+
+#   Set Working Directory
+    setwd("~/Data Science/04 Exploratory Data Analysis/")
+
+```
+  
+  
+####Data Processing  
+```{r DataProcessing1, echo=T, cache=T, eval=F}    
+
+#   Downdload & Uncompress Data
+    zip <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip";
+    download.file(zip, destfile="~/Data Science/04 Exploratory Data Analysis/exdata_data_NEI_data.zip");
+    unzip("~/Data Science/04 Exploratory Data Analysis/exdata_data_NEI_data.zip");
+
+```
+
+```{r DataProcessing2, echo=T, cache=T, eval=T} 
+
+#   Import Data
+    PM25 <- readRDS("~/Data Science/04 Exploratory Data Analysis/summarySCC_PM25.rds");
+    SCC <- readRDS("~/Data Science/04 Exploratory Data Analysis/Source_Classification_Code.rds");
+
+#   Exploratory Analysis
+    length(PM25$Emissions);
+    length(PM25$year);
+
+```
+  
+  
+####Question #1
+Have total emissions from PM2.5 decreased in the United States from 1999 to 2008?  Using the base plotting system, make a plot showing the total PM2.5 emission from all sources for each of the years 1999, 2002, 2005, and 2008. 
+  
+```{r Q1, echo=T, cache=T, eval=T}
+
+#   Data Processing
+    Total.PM25 <- tapply(PM25$Emissions, PM25$year, sum);
+
+    plot(names(Total.PM25), Total.PM25, type="l", xlab="Year", ylab="Total Emissions",
+         main="PM2.5 Emissions", col="blue", lwd=2, xlim=c(1998, 2008));
+
+    dev.copy(png, file="plot1.png", width=480, height=480);
+    dev.off();
+
+```
+  
+**Answer:** Yes, total emissions from PM2.5 have decreased in the United States from 1999 to 2008.  ( See "Total PM2.5 Emissions" plot above. )
+  
+  
+####Question #2
+Have total emissions from PM2.5 decreased in the Baltimore City, Maryland (fips == "24510") from 1999 to 2008?  Use the base plotting system to make a plot answering this question.  
+  
+```{r Q2, echo=T, cache=T, eval=T}
+
+#   Data Processing
+    baltimore <- subset (PM25, fips == "24510");
+    total.PM25yr <- tapply(baltimore$Emissions, baltimore$year, sum);
+    
+#   Line Plot - "plot2.png"
+
+    plot(names(total.PM25yr), total.PM25yr, type="l", xlab="Year", ylab="Total Emissions",
+         main="PM2.5 Emissions", col="blue", lwd=2, xlim=c(1998, 2008));
+
+    dev.copy(png, file="plot2.png", width=480, height=480);
+    dev.off();
+
+```
+
+**Answer:** Yes, total emissions from PM2.5 decreased in the Baltimore City, Maryland (fips == "24510") from 1999 to 2008.
+  
+  
+####Question #3
+Of the four types of sources indicated by the type (point, nonpoint, onroad, nonroad) variable, which of these four sources have seen decreases in emissions from 1999-2008 for Baltimore City? Which have seen increases in emissions from 1999-2008? Use the ggplot2 plotting system to make a plot answer this question. 
+  
+```{r Q3, echo=T, cache=T, eval=T}
+    
+#   Data Processing
+    baltimore <- subset(PM25, fips == "24510");
+    typePM25.year <- ddply(baltimore, .(year, type), function(x) sum(x$Emissions));
+        colnames(typePM25.year)[3] <- "Emissions";
+    
+#   Line Plot - "plot3.png"
+    plot3 <- qplot(year, Emissions, data=typePM25.year, color=type, geom="line");
+    plot3 <- plot3 + ggtitle("Baltimore: PM2.5 Emmissions by Type");
+    plot3 <- plot3 + xlab("Year") + ylab("Total Emissions");
+    plot3;
+
+    dev.copy(png, file="plot3.png", width=480, height=480);
+    dev.off();
+
+```
+
+**Answer:** Nonpoint (green line): From the plot, we see that nonpoint (green line) sharply decreased from 1999 to 2002. It remained steady from 2002 to 2005 with 1,500 Total \(PM_{2.5}\) emissions. Finally, a slight decrease occurred between 2005 and 2008 from 1,500 Total \(PM_{2.5}\) emissions.
+    
+  
+####Question #4
+Across the United States, how have emissions from coal combustion-related sources changed from 1999 to 2008?
+  
+```{r Q4, echo=T, cache=T, eval=T}
+
+    ## Script Name: plot4.R
+    ## Version: 1.0_14
+    
+    ## Libraries needed:
+    library(plyr)
+    library(ggplot2)
+    
+    ## Step 1: read in the data
+    NEI <- readRDS("expdata_prj2/summarySCC_PM25.rds")
+    SCC <- readRDS("expdata_prj2/Source_Classification_Code.rds")
+    
+    ## Step 2: subset our data for only coal-combustion
+    coalcomb.scc <- subset(SCC, EI.Sector %in% c("Fuel Comb - Comm/Instutional - Coal", 
+                                                 "Fuel Comb - Electric Generation - Coal", "Fuel Comb - Industrial Boilers, ICEs - 
+                                                 Coal"))
+    
+    ## Step 3: comparisons so that we didn't ommit anything weird
+    coalcomb.scc1 <- subset(SCC, grepl("Comb", Short.Name) & grepl("Coal", Short.Name))
+    
+    nrow(coalcomb.scc) #evaluate: rows 0
+    ## [1] 35
+    nrow(coalcomb.scc1) #evaluate: rows 91
+    ## [1] 91
+    ## Step 4: set the differences 
+    dif1 <- setdiff(coalcomb.scc$SCC, coalcomb.scc1$SCC)
+    dif2 <- setdiff(coalcomb.scc1$SCC, coalcomb.scc$SCC)
+    
+    length(dif1)#0
+    ## [1] 6
+    length(dif2)#91
+    ## [1] 62
+    ##Based on other coursera courses and previous history...
+    ###it's time to look at the union of these sets
+    coalcomb.codes <- union(coalcomb.scc$SCC, coalcomb.scc1$SCC)
+    length(coalcomb.codes) #91
+    ## [1] 97
+    ## Step 5: subset again for what we want
+    coal.comb <- subset(NEI, SCC %in% coalcomb.codes)
+    
+    ##Step 6: get the PM25 values as well
+    coalcomb.pm25year <- ddply(coal.comb, .(year, type), function(x) sum(x$Emissions))
+    
+    #rename the col
+    colnames(coalcomb.pm25year)[3] <- "Emissions"
+    
+    ##Step 7: finally plot4.png prepare to plot to png
+    png("plot4.png")
+    qplot(year, Emissions, data=coalcomb.pm25year, color=type, geom="line") + stat_summary(fun.y = "sum", fun.ymin = "sum", fun.ymax = "sum", color = "purple", aes(shape="total"), geom="line") + geom_line(aes(size="total", shape = NA)) + ggtitle(expression("Coal Combustion" ~ PM[2.5] ~ "Emissions by Source Type and Year")) + xlab("Year") + ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"))
+    dev.off()
+    ## pdf 
+    ##   2
+    ## Step 8: prepare to plot to markdown
+    qplot(year, Emissions, data=coalcomb.pm25year, color=type, geom="line") + stat_summary(fun.y = "sum", fun.ymin = "sum", fun.ymax = "sum", color = "purple", aes(shape="total"), geom="line") + geom_line(aes(size="total", shape = NA)) + ggtitle(expression("Coal Combustion" ~ PM[2.5] ~ "Emissions by Source Type and Year")) + xlab("Year") + ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"))
+    
+    plot of chunk question4
+
+```
+  
+**Answer:** Total (Purple Line): From the plot, we see that the purple line for total slightly declines from 1999 to 2002. From 2002 to 2005 the line has a marginal increase. Finally, from 2005 to 2008, the overall trend has a sharp decrease.
+
+
+.Point (Blue Line): From the plot, we see that the blue line for point is slightly similar in shape to the total purple line. From 1999 to 2002 the point blue line has a steeper decrease. From 2002 to 2005, the point blue line increases only slightly. Finally, from 2005 to 2008, the overall trend has a sharp decrease.
+
+
+.Nonpoint (Red Line): This line is remarkably different from the other two lines. From 1999 to 2002 it has an increase (although it starts from a much lower level than the other two lines at just above zero). From 2002 to 2005 it remains nearly level and does not appear to increase or decrease much. Finally, from 2005 to 2008, another symmetrical decrease occurs to end just below the initial levels for the 1999 values.
+  
+  
+####Question #5
+How have emissions from motor vehicle sources changed from 1999 - 2008 in Baltimore City?
+  
+```{r Q5, echo=T, cache=T, eval=T}
+
+    ## Script Name: plot5.R
+    ## Version: 1.0_14
+    
+    ## Libraries needed:
+    library(plyr)
+    library(ggplot2)
+    
+    ## Step 1: read in the data
+    NEI <- readRDS("expdata_prj2/summarySCC_PM25.rds")
+    SCC <- readRDS("expdata_prj2/Source_Classification_Code.rds")
+    
+    ## Step 2A: subset our data 
+    ## Assumptions: motor vehicles = On and
+    ###check the levels for types of vehicles defined
+    mv.sourced <- unique(grep("Vehicles", SCC$EI.Sector, ignore.case = TRUE, value = TRUE))
+    
+    mv.sourcec <- SCC[SCC$EI.Sector %in% mv.sourced, ]["SCC"]
+    
+    ##Step 2B: subset the emissions from motor vehicles from
+    ##NEI for Baltimore, MD.
+    emMV.ba <- NEI[NEI$SCC %in% mv.sourcec$SCC & NEI$fips == "24510",]
+    
+    ## Step 3: find the emissions due to motor vehicles in Baltimore for every year
+    balmv.pm25yr <- ddply(emMV.ba, .(year), function(x) sum(x$Emissions))
+    colnames(balmv.pm25yr)[2] <- "Emissions"
+    
+    ## Step 4: Plot to png
+    png("plot5.png")
+    qplot(year, Emissions, data=balmv.pm25yr, geom="line") + ggtitle(expression("Baltimore City" ~ PM[2.5] ~ "Motor Vehicle Emissions by Year")) + xlab("Year") + ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"))
+    dev.off()
+    ## pdf 
+    ##   2
+    ## Step 5: Plot to markdown
+    qplot(year, Emissions, data=balmv.pm25yr, geom="line") + ggtitle(expression("Baltimore City" ~ PM[2.5] ~ "Motor Vehicle Emissions by Year")) + xlab("Year") + ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"))
+    
+    plot of chunk question5
+
+```
+  
+**Answer:** Starting with 1999, the \(PM_{2.5}\) emissions was just below 350, the levels fell sharply until 2002. From 2002 to 2005 the levels plateaued. Finally from 2005 to 2008, the \(PM_{2.5}\) emissions drop to below 100 \(PM_{2.5}\) emissions.
+  
+  
+####Question #6
+  
+Compare emissions from motor vehicle sources in Baltimore City with emissions from motor vehicle sources in Los Angeles County, California, California (fips == "06037"). Which city has seen greater changes over time in motor vehicle emissions?
+  
+```{r Q6, echo=T, cache=T, eval=T}
+
+## Script Name: plot6.R
+## Version: 1.0_14
+
+
+
+## Step 1: read in the data
+NEI <- readRDS("expdata_prj2/summarySCC_PM25.rds")
+SCC <- readRDS("expdata_prj2/Source_Classification_Code.rds")
+
+## Step 2: check the levels for types of vehicles defined
+mv.sourced <- unique(grep("Vehicles", SCC$EI.Sector, ignore.case = TRUE, value = TRUE))
+
+mv.sourcec <- SCC[SCC$EI.Sector %in% mv.sourced, ]["SCC"]
+
+
+## Step 3A: subset our data Baltimore City
+emMV.ba <- NEI[NEI$SCC %in% mv.sourcec$SCC & NEI$fips == "24510", ]
+## Step 3B: subset our data Los Angeles County
+emMV.LA <- NEI[NEI$SCC %in% mv.sourcec$SCC & NEI$fips == "06037", ]
+
+## Step 3C: bind the data created in steps 3A and 3B
+emMV.comb <- rbind(emMV.ba, emMV.LA)
+
+## Step 4: Find the emmissions due to motor vehicles in 
+## Baltimore (city) and Los Angeles County
+tmveYR.county <- aggregate (Emissions ~ fips * year, data =emMV.comb, FUN = sum ) 
+tmveYR.county$county <- ifelse(tmveYR.county$fips == "06037", "Los Angeles", "Baltimore")
+
+## Step 5: plotting to png
+png("plot6.png", width=750)
+qplot(year, Emissions, data=tmveYR.county, geom="line", color=county) + ggtitle(expression("Motor Vehicle Emission Levels" ~ PM[2.5] ~ "  from 1999 to 2008 in Los Angeles County, CA and Baltimore, MD")) + xlab("Year") + ylab(expression("Levels of" ~ PM[2.5] ~ " Emissions"))
+dev.off()
+## pdf 
+##   2
+##Plot to markdown
+qplot(year, Emissions, data=tmveYR.county, geom="line", color=county) + ggtitle(expression("Motor Vehicle Emission Levels" ~ PM[2.5] ~ "  from 1999 to 2008 in Los Angeles County, CA and Baltimore, MD")) + xlab("Year") + ylab(expression("Levels of" ~ PM[2.5] ~ " Emissions"))
+
+
+```
+  
+**Answer:** Comparisons of \(PM_{2.5}\) emissions between Baltimore, MD (a city in MD) and Los Angeles, CA (county). In this case, we are asked to compare a city to a county. In plot 6, we notice that Baltimore, MD starts considerably lower in terms of \(PM_{2.5}\) emissions.
+
+.Baltimore, MD [city] (Red Line): The red line starts marginally above zero and below 1,000 \(PM_{2.5}\) emission values. Between 1999 and 2002, it slowly declines and remains nearly static between 2002 and 2008.
+
+
+.Los Angeles, CA [county] (Blue Line): The blue line starts significantly higher than the Baltimore, MD line. Starting with 1999, slightly below 4,000 \(PM_{2.5}\) emisions and steadily increases to 2005. The value of \(PM_{2.5}\) emissions for 2005 hits a peak at approximately 4,500 \(PM_{2.5}\) emision levels and then decreases between 2005 and 2008 with an ending value point of slightly above 4,000 \(PM_{2.5}\) emissions.
