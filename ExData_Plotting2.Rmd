@@ -126,22 +126,10 @@ Of the four types of sources indicated by the type (point, nonpoint, onroad, non
 Across the United States, how have emissions from coal combustion-related sources changed from 1999 to 2008?
   
 ```{r Q4, echo=T, cache=T, eval=T}
-
-    ## Script Name: plot4.R
-    ## Version: 1.0_14
     
-    ## Libraries needed:
-    library(plyr)
-    library(ggplot2)
-    
-    ## Step 1: read in the data
-    NEI <- readRDS("expdata_prj2/summarySCC_PM25.rds")
-    SCC <- readRDS("expdata_prj2/Source_Classification_Code.rds")
-    
-    ## Step 2: subset our data for only coal-combustion
-    coalcomb.scc <- subset(SCC, EI.Sector %in% c("Fuel Comb - Comm/Instutional - Coal", 
-                                                 "Fuel Comb - Electric Generation - Coal", "Fuel Comb - Industrial Boilers, ICEs - 
-                                                 Coal"))
+#   Data Processing
+    coalcomb.scc <- subset(SCC, EI.Sector %in% c("Fuel Comb - Comm/Instutional - Coal",
+        "Fuel Comb - Electric Generation - Coal", "Fuel Comb - Industrial Boilers, ICEs Coal"));
     
     ## Step 3: comparisons so that we didn't ommit anything weird
     coalcomb.scc1 <- subset(SCC, grepl("Comb", Short.Name) & grepl("Coal", Short.Name))
@@ -164,77 +152,50 @@ Across the United States, how have emissions from coal combustion-related source
     length(coalcomb.codes) #91
     ## [1] 97
     ## Step 5: subset again for what we want
-    coal.comb <- subset(NEI, SCC %in% coalcomb.codes)
+    coal.comb <- subset(PM25, SCC %in% coalcomb.codes)
     
     ##Step 6: get the PM25 values as well
     coalcomb.pm25year <- ddply(coal.comb, .(year, type), function(x) sum(x$Emissions))
-    
-    #rename the col
     colnames(coalcomb.pm25year)[3] <- "Emissions"
-    
-    ##Step 7: finally plot4.png prepare to plot to png
-    png("plot4.png")
-    qplot(year, Emissions, data=coalcomb.pm25year, color=type, geom="line") + stat_summary(fun.y = "sum", fun.ymin = "sum", fun.ymax = "sum", color = "purple", aes(shape="total"), geom="line") + geom_line(aes(size="total", shape = NA)) + ggtitle(expression("Coal Combustion" ~ PM[2.5] ~ "Emissions by Source Type and Year")) + xlab("Year") + ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"))
-    dev.off()
-    ## pdf 
-    ##   2
-    ## Step 8: prepare to plot to markdown
-    qplot(year, Emissions, data=coalcomb.pm25year, color=type, geom="line") + stat_summary(fun.y = "sum", fun.ymin = "sum", fun.ymax = "sum", color = "purple", aes(shape="total"), geom="line") + geom_line(aes(size="total", shape = NA)) + ggtitle(expression("Coal Combustion" ~ PM[2.5] ~ "Emissions by Source Type and Year")) + xlab("Year") + ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"))
-    
-    plot of chunk question4
+
+#   Line Plot - "plot4.png"
+    plot4 <- qplot(year, Emissions, data=coalcomb.pm25year, color=type, geom="line");
+    plot4 <- plot4 + stat_summary(fun.y="sum", fun.ymin="sum", fun.ymax="sum", color="purple", 
+        aes(shape="total"), geom="line");
+    plot4 <- plot4 + geom_line(aes(size="total", shape = NA));
+    plot4 <- plot4 + ggtitle(expression("Coal Combustion" ~ PM[2.5] ~ "Emissions by Source Type and Year")); 
+    plot4 <- plot4 + xlab("Year") + ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"));
+    plot4;
+
+    dev.copy(png, file="plot3.png", width=480, height=480);
+    dev.off();
 
 ```
   
 **Answer:** 
-
-
-.Point (Blue Line): From the plot, we see that the blue line for point is slightly similar in shape to the total purple line. From 1999 to 2002 the point blue line has a steeper decrease. From 2002 to 2005, the point blue line increases only slightly. Finally, from 2005 to 2008, the overall trend has a sharp decrease.
-
-
-.Nonpoint (Red Line): This line is remarkably different from the other two lines. From 1999 to 2002 it has an increase (although it starts from a much lower level than the other two lines at just above zero). From 2002 to 2005 it remains nearly level and does not appear to increase or decrease much. Finally, from 2005 to 2008, another symmetrical decrease occurs to end just below the initial levels for the 1999 values.
   
   
 ####Question #5
 How have emissions from motor vehicle sources changed from 1999 - 2008 in Baltimore City?
   
 ```{r Q5, echo=T, cache=T, eval=T}
-
-    ## Script Name: plot5.R
-    ## Version: 1.0_14
     
-    ## Libraries needed:
-    library(plyr)
-    library(ggplot2)
-    
-    ## Step 1: read in the data
-    NEI <- readRDS("expdata_prj2/summarySCC_PM25.rds")
-    SCC <- readRDS("expdata_prj2/Source_Classification_Code.rds")
-    
-    ## Step 2A: subset our data 
-    ## Assumptions: motor vehicles = On and
-    ###check the levels for types of vehicles defined
+#   Data Processing
     mv.sourced <- unique(grep("Vehicles", SCC$EI.Sector, ignore.case = TRUE, value = TRUE))
-    
     mv.sourcec <- SCC[SCC$EI.Sector %in% mv.sourced, ]["SCC"]
     
-    ##Step 2B: subset the emissions from motor vehicles from
-    ##NEI for Baltimore, MD.
-    emMV.ba <- NEI[NEI$SCC %in% mv.sourcec$SCC & NEI$fips == "24510",]
+    #   Subset Vehicle Emissions Data
+        emMV.ba <- NEI[NEI$SCC %in% mv.sourcec$SCC & NEI$fips == "24510",]
     
-    ## Step 3: find the emissions due to motor vehicles in Baltimore for every year
-    balmv.pm25yr <- ddply(emMV.ba, .(year), function(x) sum(x$Emissions))
-    colnames(balmv.pm25yr)[2] <- "Emissions"
+    #   Subset Vehicle Emissions Data for Baltimore
+        balmv.pm25yr <- ddply(emMV.ba, .(year), function(x) sum(x$Emissions))
+        colnames(balmv.pm25yr)[2] <- "Emissions"
     
-    ## Step 4: Plot to png
-    png("plot5.png")
-    qplot(year, Emissions, data=balmv.pm25yr, geom="line") + ggtitle(expression("Baltimore City" ~ PM[2.5] ~ "Motor Vehicle Emissions by Year")) + xlab("Year") + ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"))
-    dev.off()
-    ## pdf 
-    ##   2
-    ## Step 5: Plot to markdown
-    qplot(year, Emissions, data=balmv.pm25yr, geom="line") + ggtitle(expression("Baltimore City" ~ PM[2.5] ~ "Motor Vehicle Emissions by Year")) + xlab("Year") + ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"))
-    
-    plot of chunk question5
+#   Line Plot - "plot5.png"
+    plot5 <- qplot(year, Emissions, data=balmv.pm25yr, geom="line") ;
+    plot5 <- plot5 + ggtitle("Baltimore City PM2.5 Motor Vehicle Emissions by Year"); 
+    plot5 <- plot5 + xlab("Year") + ylab("Total PM2.5 Emissions");
+    plot5;
 
 ```
   
@@ -242,48 +203,28 @@ How have emissions from motor vehicle sources changed from 1999 - 2008 in Baltim
   
   
 ####Question #6
-  
 Compare emissions from motor vehicle sources in Baltimore City with emissions from motor vehicle sources in Los Angeles County, California, California (fips == "06037"). Which city has seen greater changes over time in motor vehicle emissions?
   
 ```{r Q6, echo=T, cache=T, eval=T}
 
-## Script Name: plot6.R
-## Version: 1.0_14
+#   Data Processing
+    mv.sourced <- unique(grep("Vehicles", SCC$EI.Sector, ignore.case=T, value=T));
+    mv.sourcec <- SCC[SCC$EI.Sector %in% mv.sourced, ]["SCC"];
+
+    #   Subset Baltimore & Los Angeles County Data
+        emMV.ba <- PM25[PM25$SCC %in% mv.sourcec$SCC & PM25$fips == "24510", ];
+        emMV.LA <- PM25[PM25$SCC %in% mv.sourcec$SCC & PM25$fips == "06037", ];
+        emMV.comb <- rbind(emMV.ba, emMV.LA);
+    
+    tmveYR.county <- aggregate (Emissions ~ fips * year, data=emMV.comb, FUN=sum) ;  # Vehicle Emissions
+    tmveYR.county$county <- ifelse(tmveYR.county$fips=="06037", "Los Angeles", "Baltimore");  # Vehicle Emissions
 
 
-
-## Step 1: read in the data
-NEI <- readRDS("expdata_prj2/summarySCC_PM25.rds")
-SCC <- readRDS("expdata_prj2/Source_Classification_Code.rds")
-
-## Step 2: check the levels for types of vehicles defined
-mv.sourced <- unique(grep("Vehicles", SCC$EI.Sector, ignore.case = TRUE, value = TRUE))
-
-mv.sourcec <- SCC[SCC$EI.Sector %in% mv.sourced, ]["SCC"]
-
-
-## Step 3A: subset our data Baltimore City
-emMV.ba <- NEI[NEI$SCC %in% mv.sourcec$SCC & NEI$fips == "24510", ]
-## Step 3B: subset our data Los Angeles County
-emMV.LA <- NEI[NEI$SCC %in% mv.sourcec$SCC & NEI$fips == "06037", ]
-
-## Step 3C: bind the data created in steps 3A and 3B
-emMV.comb <- rbind(emMV.ba, emMV.LA)
-
-## Step 4: Find the emmissions due to motor vehicles in 
-## Baltimore (city) and Los Angeles County
-tmveYR.county <- aggregate (Emissions ~ fips * year, data =emMV.comb, FUN = sum ) 
-tmveYR.county$county <- ifelse(tmveYR.county$fips == "06037", "Los Angeles", "Baltimore")
-
-## Step 5: plotting to png
-png("plot6.png", width=750)
-qplot(year, Emissions, data=tmveYR.county, geom="line", color=county) + ggtitle(expression("Motor Vehicle Emission Levels" ~ PM[2.5] ~ "  from 1999 to 2008 in Los Angeles County, CA and Baltimore, MD")) + xlab("Year") + ylab(expression("Levels of" ~ PM[2.5] ~ " Emissions"))
-dev.off()
-## pdf 
-##   2
-##Plot to markdown
-qplot(year, Emissions, data=tmveYR.county, geom="line", color=county) + ggtitle(expression("Motor Vehicle Emission Levels" ~ PM[2.5] ~ "  from 1999 to 2008 in Los Angeles County, CA and Baltimore, MD")) + xlab("Year") + ylab(expression("Levels of" ~ PM[2.5] ~ " Emissions"))
-
+#   Line Plot - "plot6.png"
+    plot6 <- qplot(year, Emissions, data=tmveYR.county, geom="line", color=county);
+    plot6 <- plot6 + ggtitle("Vehicle Emission Levels");
+    plot6 <- plot6 + xlab("Year") + ylab("Levels of PM2.5 Emissions");
+    plot6;
 
 ```
   
