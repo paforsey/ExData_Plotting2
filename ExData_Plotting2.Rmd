@@ -27,24 +27,21 @@ You must address the following questions and tasks in your exploratory analysis.
     library(utils);
     library(grid);
     library(plyr);
+    library(dplyr);
 
 #   Set Working Directory
-    setwd("~/Data Science/04 Exploratory Data Analysis/")
+    setwd("~/Data Science/04 Exploratory Data Analysis/");
 
 ```
   
   
 ####Data Processing  
-```{r DataProcessing1, echo=T, cache=T, eval=F}    
+```{r DataProcessing, echo=T, cache=T, eval=F}    
 
 #   Downdload & Uncompress Data
     zip <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip";
     download.file(zip, destfile="~/Data Science/04 Exploratory Data Analysis/exdata_data_NEI_data.zip");
     unzip("~/Data Science/04 Exploratory Data Analysis/exdata_data_NEI_data.zip");
-
-```
-
-```{r DataProcessing2, echo=T, cache=T, eval=T} 
 
 #   Import Data
     PM25 <- readRDS("~/Data Science/04 Exploratory Data Analysis/summarySCC_PM25.rds");
@@ -167,7 +164,7 @@ Across the United States, how have emissions from coal combustion-related source
     plot4 <- plot4 + xlab("Year") + ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"));
     plot4;
 
-    dev.copy(png, file="plot3.png", width=480, height=480);
+    dev.copy(png, file="plot4.png", width=480, height=480);
     dev.off();
 
 ```
@@ -197,6 +194,9 @@ How have emissions from motor vehicle sources changed from 1999 - 2008 in Baltim
     plot5 <- plot5 + xlab("Year") + ylab("Total PM2.5 Emissions");
     plot5;
 
+    dev.copy(png, file="plot5.png", width=480, height=480);
+    dev.off();
+
 ```
   
 **Answer:** 
@@ -225,6 +225,9 @@ Compare emissions from motor vehicle sources in Baltimore City with emissions fr
     plot6 <- plot6 + ggtitle("Vehicle Emission Levels");
     plot6 <- plot6 + xlab("Year") + ylab("Levels of PM2.5 Emissions");
     plot6;
+
+    dev.copy(png, file="plot6.png", width=480, height=480);
+    dev.off();
 
 ```
   
