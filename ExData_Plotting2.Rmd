@@ -65,6 +65,7 @@ Have total emissions from PM2.5 decreased in the United States from 1999 to 2008
 #   Data Processing
     Total.PM25 <- tapply(PM25$Emissions, PM25$year, sum);
 
+#   Line Plot - "plot1.png"
     plot(names(Total.PM25), Total.PM25, type="l", xlab="Year", ylab="Total Emissions",
          main="PM2.5 Emissions", col="blue", lwd=2, xlim=c(1998, 2008));
 
@@ -86,7 +87,6 @@ Have total emissions from PM2.5 decreased in the Baltimore City, Maryland (fips 
     total.PM25yr <- tapply(baltimore$Emissions, baltimore$year, sum);
     
 #   Line Plot - "plot2.png"
-
     plot(names(total.PM25yr), total.PM25yr, type="l", xlab="Year", ylab="Total Emissions",
          main="PM2.5 Emissions", col="blue", lwd=2, xlim=c(1998, 2008));
 
